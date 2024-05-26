@@ -1,5 +1,6 @@
 package aidyn.kelbetov.smtrestapi.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -31,5 +32,13 @@ public class User {
     @JoinColumn(name = "departmentId")
     private Department userDepartment;
     private int lateCount;
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime lateTime;
+
+    public void addLateMinutes(long minutes) {
+        if (this.lateTime == null) {
+            this.lateTime = LocalTime.MIDNIGHT;
+        }
+        this.lateTime = this.lateTime.plusMinutes(minutes);
+    }
 }

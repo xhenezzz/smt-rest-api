@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 @Service
 public class DepartmentService {
     @Autowired
@@ -44,19 +43,26 @@ public class DepartmentService {
     }
 
 
-    public double getTotalWorkHoursInDepartmentForPeriod(Long departmentId, LocalDateTime startDate, LocalDateTime endDate) {
+    public String getTotalWorkHoursInDepartmentForPeriod(Long departmentId, LocalDateTime startDate, LocalDateTime endDate) {
         Department department = repository.findById(departmentId)
                 .orElseThrow(() -> new RuntimeException("Department not found"));
         List<User> users = department.getUsers();
-        double totalWorkHours = 0;
+
+        Duration totalWorkTime = Duration.ZERO;
+
         for (User user : users) {
             List<WorkLog> workLogs = workLogRepository.findByUserIdAndStartTimeBetween(user.getId(), startDate, endDate);
-            totalWorkHours += calculateTotalWorkHours(workLogs); // здесь вызывайте ваш метод для подсчета отработанных часов на основе workLogs
+            totalWorkTime = totalWorkTime.plus(calculateTotalWorkHours(workLogs));
         }
-        return totalWorkHours;
+
+        long hours = totalWorkTime.toHours();
+        long minutes = totalWorkTime.toMinutesPart();
+
+        return String.format("%d:%02d", hours, minutes);
     }
 
-    public double calculateTotalWorkHours(List<WorkLog> workLogs) {
+
+    public Duration calculateTotalWorkHours(List<WorkLog> workLogs) {
         long totalWorkTimeMillis = 0;
         for (WorkLog workLog : workLogs) {
             LocalDateTime startTime = workLog.getStartTime();
@@ -65,18 +71,15 @@ public class DepartmentService {
             long workTimeMillis = ChronoUnit.MILLIS.between(startTime, endTime);
             totalWorkTimeMillis += workTimeMillis;
         }
-
-        long totalWorkTimeMinutes = TimeUnit.MILLISECONDS.toMinutes(totalWorkTimeMillis);
-        double totalWorkTimeHours = totalWorkTimeMinutes / 60.0; // Convert minutes to hours
-
-        return totalWorkTimeHours;
+        return Duration.ofMillis(totalWorkTimeMillis);
     }
 
-    public void updateDepartmentTime(Long depId, Department startTimeNew){
+    public void updateDepartmentTime(Long depId, Department newDepTime){
         Department department = repository.findById(depId).orElseThrow();
-        department.setStartTime(startTimeNew.getStartTime());
+        department.setStartTime(newDepTime.getStartTime());
         repository.save(department);
     }
+
 
     public void updateUserDep(Long userId, Long dep1){
         User user = userRepository.findById(userId).orElseThrow();
@@ -85,7 +88,7 @@ public class DepartmentService {
         userRepository.save(user);
     }
 
-    public int getTotalLateCountForDepartment(Long departmentId, LocalDateTime from, LocalDateTime to){
+    public int getTotalLateCountForDepartment(Long departmentId, LocalDate from, LocalDate to){
         Department department = repository.findById(departmentId).orElseThrow();
         int countTotalLate = 0;
         List<User> users = department.getUsers();
@@ -96,21 +99,26 @@ public class DepartmentService {
         return countTotalLate;
     }
 
-//    public long getTotalLateTimeForDepartment(Long departmentId, LocalDateTime from, LocalDateTime to) {
-//        Department department = repository.findById(departmentId).orElseThrow();
-//        long totalLateTime = 0;
-//        List<User> users = department.getUsers();
-//        for(User user: users){
-//            List<WorkLog> workLogs = workLogRepository.findByUserIdAndStartTimeBetween(user.getId(), from, to);
-//            for (WorkLog workLog : workLogs){
-//                LocalDateTime departmentStartTime = LocalDateTime.of(from, user.getUserDepartment().getStartTime());
-//                if(workLog.getStartTime().isAfter(departmentStartTime)){
-//                    totalLateTime += Duration.between(departmentStartTime, workLog.getStartTime()).toMinutes();
-//                }
-//            }
-//        }
-//        return totalLateTime;
-//    }
+    public String getTotalLateTimeForDepartment(Long departmentId, LocalDateTime from, LocalDateTime to, Long userId) {
+        Department department = repository.findById(departmentId).orElseThrow();
+        long totalLateTime = 0;
+
+        List<User> users = (userId != null) ? List.of(userRepository.findById(userId).orElseThrow()) : department.getUsers();
+
+        for (User user : users) {
+            List<WorkLog> workLogs = workLogRepository.findByUserIdAndStartTimeBetween(user.getId(), from, to);
+            for (WorkLog workLog : workLogs) {
+                LocalDateTime departmentStartTime = LocalDateTime.of(LocalDate.from(from), user.getUserDepartment().getStartTime());
+                if (workLog.getStartTime().isAfter(departmentStartTime)) {
+                    totalLateTime += Duration.between(departmentStartTime, workLog.getStartTime()).toMinutes();
+                }
+            }
+        }
+        long hours = totalLateTime / 60;
+        long minutes = totalLateTime % 60;
+        return String.format("%d:%02d", hours, minutes);
+    }
+
 
 
 }

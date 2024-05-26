@@ -23,7 +23,7 @@ public class UserController {
     @PostMapping("/start")
     public ResponseEntity<WorkLog> startWorkSession(@RequestParam Long userId){
         WorkLog workLog = workLogService.startWorkSession(userId);
-        userService.isUserLate(LocalTime.from(workLog.getStartTime()), userId);
+        userService.isUserLate(workLog.getStartTime().toLocalTime(), userId);
         return ResponseEntity.ok(workLog);
     }
 

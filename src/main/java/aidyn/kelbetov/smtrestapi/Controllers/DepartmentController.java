@@ -32,10 +32,10 @@ public class DepartmentController {
     }
 
     @GetMapping("/{departmentId}/totalWorkHours")
-    public double getTotalWorkHoursInDepartmentForPeriod(
+    public String getTotalWorkHoursInDepartmentForPeriod(
             @PathVariable Long departmentId,
-            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime startDate,
-            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDateTime endDate) {
+            @RequestParam("startDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam("endDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
         return service.getTotalWorkHoursInDepartmentForPeriod(departmentId, startDate, endDate);
     }
 
@@ -51,20 +51,20 @@ public class DepartmentController {
         return ResponseEntity.ok("Пароль для юзера: " + depId + " успешно обновлен!");
     }
 
-//    @GetMapping("/{departmentId}/totalLateCount")
-//    public int getTotalLateCountForDepartment(
-//            @PathVariable Long departmentId,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-//        return service.getTotalLateCountForDepartment(departmentId, from, to);
-//    }
-//
-//    @GetMapping("/{departmentId}/totalLateTime")
-//    public long getTotalLateTimeForDepartment(
-//            @PathVariable Long departmentId,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-//        return service.getTotalLateTimeForDepartment(departmentId, from, to);
-//    }
+    @GetMapping("/{departmentId}/totalLateCount")
+    public int getTotalLateCountForDepartment(
+            @PathVariable Long departmentId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return service.getTotalLateCountForDepartment(departmentId, from, to);
+    }
 
+    @GetMapping("/{departmentId}/totalLateTime")
+    public String getTotalLateTimeForDepartment(
+            @PathVariable Long departmentId,
+            @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to,
+            @RequestParam(value = "userId", required = false) Long userId) {
+        return service.getTotalLateTimeForDepartment(departmentId, from, to, userId);
+    }
 }

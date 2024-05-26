@@ -46,6 +46,8 @@ public class UserService {
             }
             rolesSet.add(foundRole);
         }
+        user.setLateTime(LocalTime.of(0,0));
+        user.setLateCount(0);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(rolesSet);
         User savedUser = userRepository.save(user);
@@ -54,6 +56,8 @@ public class UserService {
         userDTO.setSecondName(savedUser.getSecondName());
         userDTO.setDepartment(savedUser.getUserDepartment());
         userDTO.setRoles(savedUser.getRoles());
+        userDTO.setLateCount(user.getLateCount());
+        userDTO.setLateTime(user.getLateTime());
         return userDTO;
     }
 
@@ -84,16 +88,11 @@ public class UserService {
 
             if (department != null) {
                 LocalTime startDepTimeForUser = department.getStartTime();
+                if(startTime.isAfter(startDepTimeForUser)){
+                    long lateMinutes = ChronoUnit.MINUTES.between(startDepTimeForUser, startTime);
 
-                if (startTime.isAfter(startDepTimeForUser)) {
-                    long lateMinutes = startTime.until(startDepTimeForUser, ChronoUnit.MINUTES);
-
-                    // Обновляем общее время опозданий
-                    user.setLateTime(user.getLateTime().plusMinutes(lateMinutes));
-
-                    // Увеличиваем счетчик опозданий
+                    user.addLateMinutes(lateMinutes);
                     user.setLateCount(user.getLateCount() + 1);
-
                     userRepository.save(user);
                     return true;
                 }

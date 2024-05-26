@@ -12,10 +12,7 @@ import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +26,8 @@ public class WorkLogService {
     private UserRepository userRepository;
     @Autowired
     private DepartmentRepository departmentRepository;
+    @Autowired
+    private UserService userService;
 
     public WorkLog startWorkSession(Long userId) {
         User myUser = userRepository.findById(userId).orElseThrow();
@@ -40,7 +39,6 @@ public class WorkLogService {
         WorkLog workLog = new WorkLog();
         workLog.setUser(myUser);
         workLog.setStartTime(LocalDateTime.now());
-
         return workLogRepository.save(workLog);
     }
 
