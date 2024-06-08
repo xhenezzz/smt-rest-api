@@ -11,5 +11,5 @@ public class SmtRestApiApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SmtRestApiApplication.class, args);
 	}
-
+ 
 }
