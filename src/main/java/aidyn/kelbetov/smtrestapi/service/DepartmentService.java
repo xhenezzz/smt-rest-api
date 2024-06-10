@@ -7,9 +7,11 @@ import aidyn.kelbetov.smtrestapi.model.WorkLog;
 import aidyn.kelbetov.smtrestapi.repository.DepartmentRepository;
 import aidyn.kelbetov.smtrestapi.repository.UserRepository;
 import aidyn.kelbetov.smtrestapi.repository.WorkLogRepository;
+import org.hibernate.jdbc.Work;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -74,6 +76,25 @@ public class DepartmentService {
         return Duration.ofMillis(totalWorkTimeMillis);
     }
 
+    public BigDecimal calculateSalary(User user, List<WorkLog> workLogs, LocalDate startDate, LocalDate endDate){
+        List<WorkLog> filteredWorkLogs = workLogs.stream()
+                .filter(wl -> wl.getStartTime().toLocalDate().isAfter(startDate) && wl.getStartTime().toLocalDate().isBefore(endDate))
+                .collect(Collectors.toList());
+
+        Duration totalWorkHours = calculateTotalWorkHours(filteredWorkLogs);
+        long totalWorkHoursInMinutes = totalWorkHours.toMinutes();
+
+        BigDecimal hourlyRate = user.getUserDepartment().getHourlyRate();
+
+        BigDecimal salary = hourlyRate.multiply(BigDecimal.valueOf(totalWorkHoursInMinutes / 60.0));
+        return salary;
+    }
+
+    public BigDecimal calculateSalary(User user, List<WorkLog> workLogs){
+        LocalDate startDate = LocalDate.now().withDayOfMonth(1);
+        LocalDate endDate = LocalDate.now();
+        return calculateSalary(user, workLogs, startDate, endDate);
+    }
     public void updateDepartmentTime(Long depId, Department newDepTime){
         Department department = repository.findById(depId).orElseThrow();
         department.setStartTime(newDepTime.getStartTime());

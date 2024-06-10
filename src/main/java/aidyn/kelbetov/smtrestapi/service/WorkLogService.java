@@ -73,6 +73,8 @@ public class WorkLogService {
         return workLogRepository.save(lastSession);
     }
 
+
+
     public UserInfo getUserInformationByRange(Long user, LocalDateTime start, LocalDateTime end) {
         List<WorkLog> workLogs = workLogRepository.findByUserIdAndStartTimeBetween(user, start, end);
         long totalWorkTimeMillis = calculateTotalWorkTimeMillis(workLogs);
